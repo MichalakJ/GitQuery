@@ -1,5 +1,7 @@
 package reader;
 
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -9,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 public class PackIndex {
     private String indexPackFile;
     private byte[] fileByte;
+    static final Logger logger = Logger.getLogger(PackIndex.class);
+
     public PackIndex(String indexPackFile) {
         this.indexPackFile = indexPackFile;
     }
@@ -21,8 +25,9 @@ public class PackIndex {
     public void readMetaData() throws IOException {
         String pack = readMetaFirst();
         String version = readMetaVersion();
-        System.out.println(pack);
-        System.out.println(version);
+        logger.debug("index pack file first 4 bytes: " + pack);
+        logger.debug("index pack file version: " + version);
+
     }
 
     private String readMetaVersion() {

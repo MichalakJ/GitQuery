@@ -1,5 +1,7 @@
 package reader;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -16,6 +18,8 @@ public class GitRepository {
     private final static String packFileLocation = ".git\\objects\\pack";
     private String packFileDir;
     private byte[] fileByte;
+
+    static final Logger logger = Logger.getLogger(GitRepository.class);
 
     public GitRepository(String repositoryDirectory, String workDirectory) {
         this.repositoryDirectory = repositoryDirectory;
@@ -36,13 +40,13 @@ public class GitRepository {
         String pack = readMetaPACK();
         String version = readMetaVersion();
         int objectNumber = readNumberOfObjects();
-        System.out.println(pack);
-        System.out.println(version);
-        System.out.println(objectNumber);
+        logger.debug("pack file first 4 bytes: " + pack);
+        logger.debug("pack file version: " + version);
+        logger.debug("pack file objects number: " + objectNumber);
     }
 
     public int readObject(int index) throws UnsupportedEncodingException, DataFormatException {
-
+        logger.debug("reading object from pack file");
         int currentByte = FileManager.getUnsignedByte(fileByte, index);
         String currentByteStr = FileManager.toBinary(currentByte);
         String type = currentByteStr.substring(1, 4);
@@ -55,11 +59,11 @@ public class GitRepository {
             currentByteStr = FileManager.toBinary(currentByte);
             size = size + currentByteStr.substring(1,7);
         }
-        System.out.println(type);
-        System.out.println(size);
+        logger.debug("object type: " + type);
+        logger.debug("object size: " + size);
         index++;
-        String s = FileManager.decompressObject(FileManager.partArray(fileByte, index, 6000));
-        System.out.println(s);
+        String object = FileManager.decompressObject(FileManager.partArray(fileByte, index, 6000));
+        logger.debug("decompressed object: " + object);
         return index + 267;
     }
 
