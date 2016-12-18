@@ -31,6 +31,7 @@ public class GitRepository {
         fileByte = FileManager.readFile(packFileDir);
         PackIndex packIndex = new PackIndex(repositoryDirectory + File.separator + packFileLocation + File.separator + "pack-42bb6e044b658d60c1e4d494196dc1445b7623a6.idx");
         packIndex.init();
+        packIndex.read();
         readMetaData();
         int index = readObject(12);
         readObject(index);
@@ -57,7 +58,7 @@ public class GitRepository {
             index++;
             currentByte = FileManager.getUnsignedByte(fileByte, index);
             currentByteStr = FileManager.toBinary(currentByte);
-            size = size + currentByteStr.substring(1,7);
+            size = size + currentByteStr.substring(1,8);
         }
         logger.debug("object type: " + type);
         logger.debug("object size: " + size);
