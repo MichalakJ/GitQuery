@@ -1,12 +1,16 @@
 package reader;
 
 import org.apache.log4j.Logger;
+import reader.constants.ObjectType;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.DataFormatException;
 
 /**
@@ -33,10 +37,20 @@ public class GitRepository {
         fileByte = FileManager.readFile(packFileDir);
         PackIndex packIndex = new PackIndex(idxFileDir);
         packIndex.init();
-        packIndex.read();
+        Map<Integer, Integer> offSetMap = packIndex.read();
         readMetaData();
-        int index = readObject(12);
-        readObject(index);
+        readMainRepository(offSetMap);
+        //int index = readObject(12);
+        //readObject(index);
+    }
+
+    private void readMainRepository(Map<Integer, Integer> offSetMap) throws UnsupportedEncodingException, DataFormatException {
+        List repositoryData = new ArrayList<String>();
+        for (Integer key : offSetMap.keySet()) {
+            logger.debug(key);
+            repositoryData.add(readObject(offSetMap.get(key)));
+
+        }
     }
 
     public void readMetaData() throws IOException {
@@ -48,26 +62,34 @@ public class GitRepository {
         logger.debug("pack file objects number: " + objectNumber);
     }
 
-    public int readObject(int index) throws UnsupportedEncodingException, DataFormatException {
+    public String readObject(int index) throws UnsupportedEncodingException, DataFormatException {
         logger.debug("reading object from pack file");
         int currentByte = FileManager.getUnsignedByte(fileByte, index);
         String currentByteStr = FileManager.toBinary(currentByte);
-        String type = currentByteStr.substring(1, 4);
-        String size = currentByteStr.substring(4, 8);
-
+        String typeBinary = currentByteStr.substring(1, 4);
+        StringBuilder size = new StringBuilder(currentByteStr.substring(4, 8));
 
         while(currentByte>128){
             index++;
             currentByte = FileManager.getUnsignedByte(fileByte, index);
             currentByteStr = FileManager.toBinary(currentByte);
-            size = size + currentByteStr.substring(1,8);
+            size.append(currentByteStr.substring(1, 8));
         }
+        ObjectType type = ObjectType.getName(Integer.parseInt(typeBinary, 2));
         logger.debug("object type: " + type);
         logger.debug("object size: " + size);
         index++;
-        String object = FileManager.decompressObject(FileManager.partArray(fileByte, index, 6000));
+        String object = "stub";
+        if(type == ObjectType.COMMIT || type == ObjectType.TREE || type == ObjectType.BLOB){
+            try {
+                object = FileManager.decompressObject(FileManager.partArray(fileByte, index, fileByte.length - 1));
+            }catch (DataFormatException ex){
+                logger.debug(ex);
+            }
+        }
+
         logger.debug("decompressed object: " + object);
-        return index + 267;
+        return object;
     }
 
 

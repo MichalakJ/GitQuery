@@ -29,12 +29,12 @@ public class PackIndex {
         readMetaData();
     }
 
-    public void read() {
+    public Map<Integer, Integer> read() {
         Map<Integer, Integer> firstLevelEntries = readFirstLevelEntries();
         Integer numberOjObjects = firstLevelEntries.get(255); //last entry contains number of all objects
         readSecondLevelEntries(numberOjObjects);
         readThirdLevelEntries(numberOjObjects);
-        readFourthLevelEntries(numberOjObjects);
+        return readFourthLevelEntries(numberOjObjects);
     }
 
     private void readMetaData() throws IOException {

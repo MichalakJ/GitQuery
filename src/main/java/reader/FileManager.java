@@ -39,7 +39,7 @@ public class FileManager {
         // Decompress the bytes
         Inflater decompresser = new Inflater();
         decompresser.setInput(array);
-        byte[] result = new byte[8000];
+        byte[] result = new byte[100000];
         int resultLength = decompresser.inflate(result);
         decompresser.end();
         return new String(result, 0, resultLength, "UTF-8");
