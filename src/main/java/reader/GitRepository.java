@@ -14,22 +14,24 @@ import java.util.zip.DataFormatException;
  */
 public class GitRepository {
     private String repositoryDirectory;
-    private String workDirectory;
     private final static String packFileLocation = ".git\\objects\\pack";
     private String packFileDir;
+    private String idxFileDir;
     private byte[] fileByte;
 
     static final Logger logger = Logger.getLogger(GitRepository.class);
 
-    public GitRepository(String repositoryDirectory, String workDirectory) {
+    public GitRepository(String repositoryDirectory) {
         this.repositoryDirectory = repositoryDirectory;
-        this.workDirectory = workDirectory;
-        packFileDir = repositoryDirectory + File.separator + packFileLocation + File.separator + "pack-42bb6e044b658d60c1e4d494196dc1445b7623a6.pack";
+        packFileDir = getPackFile();
+        idxFileDir = getPackIndexFile();
     }
+
+
 
     public void readRepository() throws IOException, DataFormatException {
         fileByte = FileManager.readFile(packFileDir);
-        PackIndex packIndex = new PackIndex(repositoryDirectory + File.separator + packFileLocation + File.separator + "pack-42bb6e044b658d60c1e4d494196dc1445b7623a6.idx");
+        PackIndex packIndex = new PackIndex(idxFileDir);
         packIndex.init();
         packIndex.read();
         readMetaData();
@@ -100,11 +102,27 @@ public class GitRepository {
         this.repositoryDirectory = repositoryDirectory;
     }
 
-    public String getWorkDirectory() {
-        return workDirectory;
+    private String getPackIndexFile() {
+        String sourceLocation = repositoryDirectory + File.separator + packFileLocation;
+        File packDirectory = new File(sourceLocation);
+        for (String file : packDirectory.list()) {
+            if(file.endsWith(".idx")){
+                logger.debug("detected index file: " + file);
+                return sourceLocation + File.separator + file;
+            }
+        }
+        return null;
     }
 
-    public void setWorkDirectory(String workDirectory) {
-        this.workDirectory = workDirectory;
+    private String getPackFile() {
+        String sourceLocation = repositoryDirectory + File.separator + packFileLocation;
+        File packDirectory = new File(sourceLocation);
+        for (String file : packDirectory.list()) {
+            if(file.endsWith(".pack")){
+                logger.debug("detected pack file: " + file);
+                return sourceLocation + File.separator + file;
+            }
+        }
+        return null;
     }
 }
