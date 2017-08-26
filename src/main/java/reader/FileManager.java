@@ -45,4 +45,8 @@ public class FileManager {
         return new String(result, 0, resultLength, "UTF-8");
     }
 
+    public static int toInt(byte[] array){
+        return java.nio.ByteBuffer.wrap(array).getInt();
+    }
+
 }

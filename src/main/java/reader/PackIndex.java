@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.apache.commons.codec.binary.Hex;
 
 /**
@@ -28,13 +29,15 @@ public class PackIndex {
         readMetaData();
     }
 
-    public void read(){
+    public void read() {
         Map<Integer, Integer> firstLevelEntries = readFirstLevelEntries();
-        Integer numberOjObjects = firstLevelEntries.get(255);
+        Integer numberOjObjects = firstLevelEntries.get(255); //last entry contains number of all objects
         readSecondLevelEntries(numberOjObjects);
+        readThirdLevelEntries(numberOjObjects);
+        readFourthLevelEntries(numberOjObjects);
     }
 
-    public void readMetaData() throws IOException {
+    private void readMetaData() throws IOException {
         String pack = readMetaFirst();
         String version = readMetaVersion();
         logger.debug("index pack file first 4 bytes: " + pack);
@@ -42,11 +45,11 @@ public class PackIndex {
 
     }
 
-    public Map<Integer, Integer> readFirstLevelEntries() {
+    private Map<Integer, Integer> readFirstLevelEntries() {
         byte[] firstLevelArray = FileManager.partArray(fileByte, 8, 1023 + 8);
         Map<Integer, Integer> firstLevel = new HashMap<>();
         for (int i = 0; i < 256; i++) {
-            firstLevel.put(i, ByteBuffer.wrap(FileManager.partArray(firstLevelArray, i*4, i*4+3)).getInt());
+            firstLevel.put(i, ByteBuffer.wrap(FileManager.partArray(firstLevelArray, i * 4, i * 4 + 3)).getInt());
         }
         logger.debug("first level entries");
         for (Integer integer : firstLevel.keySet()) {
@@ -55,18 +58,47 @@ public class PackIndex {
         return firstLevel;
     }
 
-    public Map<Integer, String> readSecondLevelEntries(int numberOfObject){
+    private Map<Integer, String> readSecondLevelEntries(int numberOfObject) {
         int secondLevelStart = 1023 + 8 + 1; //this is where first level ends + 1
-        int secondLevelEnd = secondLevelStart + numberOfObject*20; //second level has 20 byte entries for each object
-        byte[] secondLevelArray = FileManager.partArray(fileByte, secondLevelStart, secondLevelStart + secondLevelEnd);
+        int secondLevelEnd = secondLevelStart + numberOfObject * 20 - 1; //second level has 20 byte entries for each object
+        byte[] secondLevelArray = FileManager.partArray(fileByte, secondLevelStart, secondLevelEnd);
         Map<Integer, String> secondLevel = new HashMap<>();
         logger.debug("second level entries");
-        for(int i = 0; i < numberOfObject; i++){
+        for (int i = 0; i < numberOfObject; i++) {
             String entry = Hex.encodeHexString(FileManager.partArray(secondLevelArray, i * 20, i * 20 + 19));
-            logger.debug(entry);
-            secondLevel.put(i,entry);
+            logger.debug(i + ":" + entry);
+            secondLevel.put(i, entry);
         }
         return secondLevel;
+    }
+
+    private Map<Integer, String> readThirdLevelEntries(int numerOfObjects) {
+        int thirdLevelStart = 1023 + 8 + 20 * numerOfObjects + 1; //this is where second level ends +1
+        int thirdLevelEnd = thirdLevelStart + 4 * numerOfObjects - 1;
+        byte[] thirdLevelArray = FileManager.partArray(fileByte, thirdLevelStart, thirdLevelEnd);
+        Map<Integer, String> thirdLevel = new HashMap<>();
+        logger.debug("third level entries");
+        for (int i = 0; i < numerOfObjects; i++) {
+            String entry = Hex.encodeHexString(FileManager.partArray(thirdLevelArray, i * 4, i * 4 + 3));
+            logger.debug(entry);
+            thirdLevel.put(i, entry);
+        }
+        return thirdLevel;
+    }
+
+    private Map<Integer, Integer> readFourthLevelEntries(int numberOfObjects) {
+        int fourthLevelStart = 8 + 1024 + 20 * numberOfObjects + 4 * numberOfObjects;
+        int fourthLevelEnd = fourthLevelStart + numberOfObjects * 4;
+        byte[] fourthLevelArray = FileManager.partArray(fileByte, fourthLevelStart, fourthLevelEnd);
+        Map<Integer, Integer> fourthLevel = new HashMap<>();
+        logger.debug("fourth level entries");
+        for (int i = 0; i < numberOfObjects; i++) {
+            int entry = FileManager.toInt(FileManager.partArray(fourthLevelArray, i * 4, i * 4 + 3));
+            fourthLevel.put(i, entry);
+            logger.debug(i + " : " + entry);
+        }
+
+        return fourthLevel;
     }
 
 
@@ -85,7 +117,6 @@ public class PackIndex {
         byte[] packNameByte = FileManager.partArray(fileByte, 0, 3);
         return new String(packNameByte, StandardCharsets.UTF_8);
     }
-
 
 
 }
