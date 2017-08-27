@@ -8,6 +8,7 @@ import constants.ObjectType;
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +50,11 @@ public class GitRepository {
         //readMainRepository(offSetMap);
         Map<Integer, ObjectType> objectTypes = getObjectTypes(fourthLevel);
         repository.setObjects(createRepositoryData(secondLevel, fourthLevel, objectTypes));
+
         logger.debug(repository.getObjects().toString());
+        for (Integer integer : fourthLevel.keySet()) {
+            logger.debug(new String(pack.readObject(fourthLevel.get(integer)), Charset.forName("UTF-8")));
+        }
 
     }
 

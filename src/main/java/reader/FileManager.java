@@ -35,14 +35,15 @@ public class FileManager {
         return String.format("%8s", Integer.toBinaryString(obj & 0xFF)).replace(' ', '0');
     }
 
-    public static String decompressObject(byte[] array) throws UnsupportedEncodingException, DataFormatException {
+    public static byte[] decompressObject(byte[] array, int outputSize) throws UnsupportedEncodingException, DataFormatException {
         // Decompress the bytes
         Inflater decompresser = new Inflater();
         decompresser.setInput(array);
-        byte[] result = new byte[10000000];
+        byte[] result = new byte[outputSize];
         int resultLength = decompresser.inflate(result);
         decompresser.end();
-        return new String(result, 0, resultLength, "UTF-8");
+        return result;
+        //return new String(result, 0, resultLength, "UTF-8");
     }
 
     public static int toInt(byte[] array){
