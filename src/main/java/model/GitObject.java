@@ -7,6 +7,9 @@ public class GitObject {
     private String sha1;
     private int offSet;
 
+    Integer diffOffset;
+    String diffSha1;
+
     public GitObject(ObjectType type, String sha1, int offSet) {
         this.type = type;
         this.sha1 = sha1;
@@ -35,6 +38,22 @@ public class GitObject {
 
     public void setOffSet(int offSet) {
         this.offSet = offSet;
+    }
+
+    public Integer getDiffOffset() {
+        return diffOffset;
+    }
+
+    public void setDiffOffset(Integer diffOffset) {
+        this.diffOffset = diffOffset;
+    }
+
+    public String getDiffSha1() {
+        return diffSha1;
+    }
+
+    public void setDiffSha1(String diffSha1) {
+        this.diffSha1 = diffSha1;
     }
 
     @Override

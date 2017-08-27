@@ -1,6 +1,7 @@
 package reader;
 
 import constants.ObjectType;
+import model.ObjectData;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 
@@ -53,7 +54,7 @@ public class Pack {
         return ObjectType.getName(Integer.parseInt(typeBinary, 2));
     }
 
-    public byte[] readObject(int index) throws UnsupportedEncodingException, DataFormatException {
+    public ObjectData readObject(int index) throws UnsupportedEncodingException, DataFormatException {
         logger.debug("reading object from pack file");
         int currentByte = getUnsignedByte(fileByte, index);
         String currentByteStr = toBinary(currentByte);
@@ -70,39 +71,58 @@ public class Pack {
         logger.debug("object type: " + type);
         logger.debug("object size: " + size);
         index++;
-        byte[] object = null;
-        if(type == ObjectType.COMMIT || type == ObjectType.TREE || type == ObjectType.BLOB){
-            object = unpackObject(index, Integer.parseInt(size.toString(), 2));
+        ObjectData objectData = new ObjectData();
+        if(type == ObjectType.COMMIT || type == ObjectType.TREE || type == ObjectType.BLOB || type == ObjectType.TAG){
+            objectData = unpackObject(index, Integer.parseInt(size.toString(), 2));
         }else if(type == ObjectType.REF_DELTA){
-            object = getRefDeltaObj(index, Integer.parseInt(size.toString(), 2));
+            objectData = getRefDeltaObj(index, Integer.parseInt(size.toString(), 2));
+        }else if(type == ObjectType.OFS_DELTA){
+            objectData = getRefOfsObj(index, Integer.parseInt(size.toString(), 2));
         }
-        if(object == null){
-            object = "Stub".getBytes();
+        if(objectData.getData() == null){
+            objectData.setData("Stub".getBytes());
         }
-        logger.debug("decompressed object: " + new String(object, Charset.defaultCharset()));
-        return object;
+        logger.debug("decompressed object: " + new String(objectData.getData(), Charset.defaultCharset()));
+        return objectData;
     }
 
-    private byte[] getRefDeltaObj(int index, int size){
+    private ObjectData getRefOfsObj(int index, int size) {
+        int currentByte = getUnsignedByte(fileByte, index);
+        String currentByteStr = toBinary(currentByte);
+        StringBuilder offSet = new StringBuilder(currentByteStr.substring(1, 8));
+        while(currentByte>128){
+            index++;
+            currentByte = getUnsignedByte(fileByte, index);
+            currentByteStr = toBinary(currentByte);
+            offSet.append(currentByteStr.substring(1, 8));
+        }
+        index++;
+
+        ObjectData objectData = unpackObject(index, size);
+        objectData.setOffset(Integer.parseInt(offSet.toString(), 2));
+        return objectData;
+
+    }
+
+    private ObjectData getRefDeltaObj(int index, int size){
         String baseObject = encodeHexString(partArray(fileByte, index, index + 19));
         logger.debug("base object of dif: " + baseObject);
         byte[] dif = null;
-        try {
-            dif = decompressObject(partArray(fileByte, index+20, fileByte.length-1), size);
-        } catch (Exception e){
-            logger.warn(e);
-        }
-        return dif;
+        ObjectData objectData = unpackObject(index, size);
+        objectData.setSha1(baseObject);
+        return objectData;
     }
 
-    private byte[] unpackObject(int index, int size) throws UnsupportedEncodingException {
+    private ObjectData unpackObject(int index, int size){
+        ObjectData objectData = new ObjectData();
         byte[] object = null;
         try {
             object = decompressObject(partArray(fileByte, index, fileByte.length - 1), size);
-        }catch (DataFormatException ex){
+        }catch (Exception ex){
             logger.warn(ex);
         }
-        return object;
+        objectData.setData(object);
+        return objectData;
     }
 
 

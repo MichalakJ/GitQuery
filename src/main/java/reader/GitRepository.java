@@ -53,7 +53,7 @@ public class GitRepository {
 
         logger.debug(repository.getObjects().toString());
         for (Integer integer : fourthLevel.keySet()) {
-            logger.debug(new String(pack.readObject(fourthLevel.get(integer)), Charset.forName("UTF-8")));
+            logger.debug(new String(pack.readObject(fourthLevel.get(integer)).getData(), Charset.forName("UTF-8")));
         }
 
     }
