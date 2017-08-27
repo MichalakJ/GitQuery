@@ -31,10 +31,10 @@ public class PackIndex {
 
     public Map<Integer, Integer> read() {
         Map<Integer, Integer> firstLevelEntries = readFirstLevelEntries();
-        Integer numberOjObjects = firstLevelEntries.get(255); //last entry contains number of all objects
-        readSecondLevelEntries(numberOjObjects);
-        readThirdLevelEntries(numberOjObjects);
-        return readFourthLevelEntries(numberOjObjects);
+        Integer numberOfObjects = firstLevelEntries.get(255); //last entry contains number of all objects
+        readSecondLevelEntries(numberOfObjects);
+        readThirdLevelEntries(numberOfObjects);
+        return readFourthLevelEntries(numberOfObjects);
     }
 
     private void readMetaData() throws IOException {
@@ -45,7 +45,7 @@ public class PackIndex {
 
     }
 
-    private Map<Integer, Integer> readFirstLevelEntries() {
+    public Map<Integer, Integer> readFirstLevelEntries() {
         byte[] firstLevelArray = FileManager.partArray(fileByte, 8, 1023 + 8);
         Map<Integer, Integer> firstLevel = new HashMap<>();
         for (int i = 0; i < 256; i++) {
@@ -58,7 +58,7 @@ public class PackIndex {
         return firstLevel;
     }
 
-    private Map<Integer, String> readSecondLevelEntries(int numberOfObject) {
+    public Map<Integer, String> readSecondLevelEntries(int numberOfObject) {
         int secondLevelStart = 1023 + 8 + 1; //this is where first level ends + 1
         int secondLevelEnd = secondLevelStart + numberOfObject * 20 - 1; //second level has 20 byte entries for each object
         byte[] secondLevelArray = FileManager.partArray(fileByte, secondLevelStart, secondLevelEnd);
@@ -72,7 +72,7 @@ public class PackIndex {
         return secondLevel;
     }
 
-    private Map<Integer, String> readThirdLevelEntries(int numerOfObjects) {
+    public Map<Integer, String> readThirdLevelEntries(int numerOfObjects) {
         int thirdLevelStart = 1023 + 8 + 20 * numerOfObjects + 1; //this is where second level ends +1
         int thirdLevelEnd = thirdLevelStart + 4 * numerOfObjects - 1;
         byte[] thirdLevelArray = FileManager.partArray(fileByte, thirdLevelStart, thirdLevelEnd);
@@ -86,7 +86,7 @@ public class PackIndex {
         return thirdLevel;
     }
 
-    private Map<Integer, Integer> readFourthLevelEntries(int numberOfObjects) {
+    public Map<Integer, Integer> readFourthLevelEntries(int numberOfObjects) {
         int fourthLevelStart = 8 + 1024 + 20 * numberOfObjects + 4 * numberOfObjects;
         int fourthLevelEnd = fourthLevelStart + numberOfObjects * 4;
         byte[] fourthLevelArray = FileManager.partArray(fileByte, fourthLevelStart, fourthLevelEnd);

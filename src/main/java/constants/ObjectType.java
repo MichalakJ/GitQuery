@@ -1,4 +1,4 @@
-package reader.constants;
+package constants;
 
 public enum ObjectType {
     EXT(0),

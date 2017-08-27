@@ -1,14 +1,14 @@
 package reader;
 
 import org.apache.log4j.Logger;
-import reader.constants.ObjectType;
+import constants.ObjectType;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.DataFormatException;
@@ -35,13 +35,24 @@ public class GitRepository {
 
     public void readRepository() throws IOException, DataFormatException {
         fileByte = FileManager.readFile(packFileDir);
+        readMetaData();
         PackIndex packIndex = new PackIndex(idxFileDir);
         packIndex.init();
+        Map<Integer, Integer> firstLevel = packIndex.readFirstLevelEntries();
+        int numberOfObjects = firstLevel.get(255);
+        Map<Integer, String> secondLevel = packIndex.readSecondLevelEntries(numberOfObjects);
+        Map<Integer, Integer> fourthLevel = packIndex.readFourthLevelEntries(numberOfObjects);
         Map<Integer, Integer> offSetMap = packIndex.read();
-        readMetaData();
+        Map<Integer, ObjectType> objectTypes = getObjectTypes(fourthLevel);
         readMainRepository(offSetMap);
-        //int index = readObject(12);
-        //readObject(index);
+    }
+
+    private Map<Integer,ObjectType> getObjectTypes(Map<Integer, Integer> fourthLevel) {
+        Map<Integer, ObjectType> types = new HashMap<>();
+        for (Integer key : fourthLevel.keySet()) {
+            types.put(key, getObjectType(fourthLevel.get(key)));
+        }
+        return types;
     }
 
     private void readMainRepository(Map<Integer, Integer> offSetMap) throws UnsupportedEncodingException, DataFormatException {
@@ -60,6 +71,22 @@ public class GitRepository {
         logger.debug("pack file first 4 bytes: " + pack);
         logger.debug("pack file version: " + version);
         logger.debug("pack file objects number: " + objectNumber);
+    }
+
+    private ObjectType getObjectType(int index){
+        logger.debug("reading object from pack file");
+        int currentByte = FileManager.getUnsignedByte(fileByte, index);
+        String currentByteStr = FileManager.toBinary(currentByte);
+        String typeBinary = currentByteStr.substring(1, 4);
+        StringBuilder size = new StringBuilder(currentByteStr.substring(4, 8));
+
+        while(currentByte>128){
+            index++;
+            currentByte = FileManager.getUnsignedByte(fileByte, index);
+            currentByteStr = FileManager.toBinary(currentByte);
+            size.append(currentByteStr.substring(1, 8));
+        }
+        return ObjectType.getName(Integer.parseInt(typeBinary, 2));
     }
 
     public String readObject(int index) throws UnsupportedEncodingException, DataFormatException {
@@ -84,7 +111,7 @@ public class GitRepository {
             try {
                 object = FileManager.decompressObject(FileManager.partArray(fileByte, index, fileByte.length - 1));
             }catch (DataFormatException ex){
-                logger.debug(ex);
+                logger.warn(ex);
             }
         }
 
