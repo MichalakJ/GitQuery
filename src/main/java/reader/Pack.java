@@ -35,7 +35,7 @@ public class Pack {
         int objectNumber = readNumberOfObjects();
         logger.debug("pack file first 4 bytes: " + pack);
         logger.debug("pack file version: " + version);
-        logger.debug("pack file objects number: " + objectNumber);
+        logger.debug("pack file Object number: " + objectNumber);
     }
 
     public ObjectType getObjectType(int index){

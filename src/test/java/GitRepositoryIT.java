@@ -1,4 +1,7 @@
 import org.junit.Test;
+import query.QueryProcessor;
+import query.condition.FilterParserException;
+import query.exception.QueryProcessorException;
 import reader.GitRepository;
 
 import java.io.IOException;
@@ -16,5 +19,12 @@ public class GitRepositoryIT {
         GitRepository gitRepository = new GitRepository(repositoryLocation);
         gitRepository.readRepository();
         System.out.println("stop");
+    }
+
+    @Test
+    public void test2() throws IOException, DataFormatException, FilterParserException, QueryProcessorException {
+        GitRepository gitRepository = new GitRepository(repositoryLocation);
+        QueryProcessor queryProcessor = new QueryProcessor(gitRepository);
+        System.out.println(queryProcessor.query("SELECT commit WHERE author startsWith M"));
     }
 }

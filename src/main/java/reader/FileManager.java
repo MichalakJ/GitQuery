@@ -1,5 +1,8 @@
 package reader;
 
+import com.jcraft.jzlib.JZlib;
+import com.jcraft.jzlib.ZStream;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;

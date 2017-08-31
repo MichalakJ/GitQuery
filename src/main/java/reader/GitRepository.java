@@ -37,7 +37,7 @@ public class GitRepository {
 
 
 
-    public void readRepository() throws IOException, DataFormatException {
+    public Repository readRepository() throws IOException, DataFormatException {
 
         packIndex.init();
         pack.init();
@@ -57,6 +57,7 @@ public class GitRepository {
 
             logger.debug(new String(object, Charset.forName("UTF-8")));
         }
+        return repository;
 
 
     }

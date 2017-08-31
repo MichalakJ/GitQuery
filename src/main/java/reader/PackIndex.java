@@ -31,7 +31,7 @@ public class PackIndex {
 
     public Map<Integer, Integer> read() {
         Map<Integer, Integer> firstLevelEntries = readFirstLevelEntries();
-        Integer numberOfObjects = firstLevelEntries.get(255); //last entry contains number of all objects
+        Integer numberOfObjects = firstLevelEntries.get(255); //last entry contains number of all Object
         readSecondLevelEntries(numberOfObjects);
         readThirdLevelEntries(numberOfObjects);
         return readFourthLevelEntries(numberOfObjects);
