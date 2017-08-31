@@ -54,7 +54,7 @@ public class Pack {
         return ObjectType.getName(Integer.parseInt(typeBinary, 2));
     }
 
-    public ObjectData readObject(int index) throws UnsupportedEncodingException, DataFormatException {
+    public ObjectData readObject(int index){
         logger.debug("reading object from pack file");
         int currentByte = getUnsignedByte(fileByte, index);
         String currentByteStr = toBinary(currentByte);

@@ -1,7 +1,10 @@
 package reader;
 
+import model.Commit;
 import model.GitObject;
+import model.ObjectData;
 import model.Repository;
+import model.factory.ObjectFactory;
 import org.apache.log4j.Logger;
 import constants.ObjectType;
 
@@ -9,10 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.zip.DataFormatException;
 
 /**
@@ -53,18 +53,66 @@ public class GitRepository {
 
         logger.debug(repository.getObjects().toString());
         for (Integer integer : fourthLevel.keySet()) {
-            logger.debug(new String(pack.readObject(fourthLevel.get(integer)).getData(), Charset.forName("UTF-8")));
+            byte[] object = reconstructObject(fourthLevel.get(integer), objectTypes.get(integer));
+
+            logger.debug(new String(object, Charset.forName("UTF-8")));
         }
 
+
+    }
+
+    private byte[] reconstructObject(Integer offset, ObjectType objectType) throws UnsupportedEncodingException, DataFormatException {
+        ObjectData objectData = pack.readObject(offset);
+        if(objectType == ObjectType.OFS_DELTA){
+            return "not-implemented".getBytes();
+        }
+        else if(objectType == ObjectType.REF_DELTA){
+            return "not-implemented".getBytes();
+        }else{
+            return objectData.getData();
+        }
     }
 
     private Map<Integer, GitObject> createRepositoryData(Map<Integer, String> secondLevel, Map<Integer, Integer> fourthLevel, Map<Integer, ObjectType> objectTypes) {
         Map<Integer, GitObject> repositoryData = new HashMap<>();
         for (Integer index : secondLevel.keySet()) {
-            repositoryData.put(index, new GitObject(objectTypes.get(index), secondLevel.get(index),fourthLevel.get(index)));
+            GitObject obj = ObjectFactory.createObject(objectTypes.get(index), secondLevel.get(index),fourthLevel.get(index));
+            if(obj.getType() == ObjectType.COMMIT){
+                addCommitData((Commit)obj, pack.readObject(fourthLevel.get(index)).getData());
+            }
+            repositoryData.put(index, obj);
         }
         return repositoryData;
     }
+
+    private void addCommitData(Commit obj, byte[] data) {
+        try {
+            String stringData = new String(data, "UTF-8");
+            String[] parts = stringData.split("\n");
+            if(parts.length>5) {
+                obj.setTree(parts[0]);
+                obj.setParent(parts[1]);
+                obj.setComment(parts[5]);
+                String[] authorData = parts[2].split("<");
+                if(authorData.length<2){
+                    logger.info("cannot parse commit author data");
+                }else{
+                    obj.setAuthor(authorData[0].substring(7));
+                    String rest[] = authorData[1].split(" ");
+                    obj.setEmail(rest[0].substring(0, rest[0].length() - 1));
+                    obj.setDate(new Date(Long.parseLong(rest[1]) * 1000));
+                }
+
+
+            }else{
+                logger.info("invalid commit format");
+            }
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        logger.info(obj.toString());
+    }
+
 
     private Map<Integer,ObjectType> getObjectTypes(Map<Integer, Integer> fourthLevel) {
         Map<Integer, ObjectType> types = new HashMap<>();
