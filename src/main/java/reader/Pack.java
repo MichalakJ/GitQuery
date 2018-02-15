@@ -2,17 +2,14 @@ package reader;
 
 import constants.ObjectType;
 import model.ObjectData;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.zip.DataFormatException;
 
 import static org.apache.commons.codec.binary.Hex.encodeHexString;
-import static reader.FileManager.*;
+import static reader.Utils.*;
 
 public class Pack {
 
@@ -38,7 +35,7 @@ public class Pack {
         logger.debug("pack file Object number: " + objectNumber);
     }
 
-    public ObjectType getObjectType(int index){
+    ObjectType getObjectType(int index){
         logger.debug("reading object from pack file");
         int currentByte = getUnsignedByte(fileByte, index);
         String currentByteStr = toBinary(currentByte);
@@ -54,7 +51,7 @@ public class Pack {
         return ObjectType.getName(Integer.parseInt(typeBinary, 2));
     }
 
-    public ObjectData readObject(int index){
+    ObjectData readObject(int index){
         logger.debug("reading object from pack file");
         int currentByte = getUnsignedByte(fileByte, index);
         String currentByteStr = toBinary(currentByte);
@@ -108,7 +105,7 @@ public class Pack {
         String baseObject = encodeHexString(partArray(fileByte, index, index + 19));
         logger.debug("base object of dif: " + baseObject);
         byte[] dif = null;
-        ObjectData objectData = unpackObject(index, size);
+        ObjectData objectData = unpackObject(index + 20, size);
         objectData.setSha1(baseObject);
         return objectData;
     }
@@ -134,7 +131,6 @@ public class Pack {
         int byte3 = versionByte[2];
         int byte4 = versionByte[3];
         return ""+byte1+"."+byte2+"."+byte3+"."+byte4;
-        //return ""+byte4;
     }
 
     private String readMetaPACK() throws IOException {

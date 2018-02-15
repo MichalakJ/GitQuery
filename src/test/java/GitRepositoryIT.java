@@ -25,6 +25,6 @@ public class GitRepositoryIT {
     public void test2() throws IOException, DataFormatException, FilterParserException, QueryProcessorException {
         GitRepository gitRepository = new GitRepository(repositoryLocation);
         QueryProcessor queryProcessor = new QueryProcessor(gitRepository);
-        System.out.println(queryProcessor.query("SELECT commit WHERE author startsWith M"));
+        System.out.println(queryProcessor.query("SELECT commit WHERE message contains test1"));
     }
 }

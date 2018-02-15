@@ -32,7 +32,7 @@ public class QueryProcessor {
 
     public String query(String query) throws QueryProcessorException, FilterParserException {
         if (query.startsWith(Expression.SELECT.getValue() + " ")) {
-            return processSelectQuery(query.substring(7));
+            return processSelectQuery(query.substring(Expression.SELECT.getValue().length() + 1));
         } else {
             throw new QueryProcessorException("Invalid statement, failed to parse first word");
         }
@@ -41,18 +41,16 @@ public class QueryProcessor {
     private String processSelectQuery(String query) throws QueryProcessorException, FilterParserException {
         String word = query.substring(0, query.indexOf(" "));
         int length = word.length() + 1;
-        String objects[] = word.split("\\.");
-        Object parentObj = Object.getObject(objects[0]);
+        String statements[] = word.split("\\.");
         Object currentObject = null;
         List<Object> objectList = new ArrayList<>();
-        for (String object : objects) {
+        for (String object : statements) {
             currentObject = Object.getObject(object);
             if (currentObject == null) {
-                throw new QueryProcessorException("Invalid statement, failed to object word, object not found: " + object);
+                throw new QueryProcessorException("Invalid statement, field not found: " + object);
             } else {
                 objectList.add(currentObject);
             }
-            parentObj = currentObject;
         }
         return processWhereQuery(query.substring(length, query.length()), objectList);
     }
@@ -151,20 +149,21 @@ public class QueryProcessor {
                         sb.append(eligibleObject.toString());
                         break;
                 }
+                sb.append("\n");
             }
-        }else{
+        } else {
             for (GitObject eligibleObject : eligibleObjects) {
-                switch(objectList.get(1)){
+                switch (objectList.get(1)) {
                     case SHA1:
                         sb.append(eligibleObject.getSha1());
                         break;
                 }
-                if(objectList.get(0) == Object.COMMIT){
-                    Commit commit = (Commit)eligibleObject;
-                    switch(objectList.get(1)){
+                if (objectList.get(0) == Object.COMMIT) {
+                    Commit commit = (Commit) eligibleObject;
+                    switch (objectList.get(1)) {
                         case AUTHOR:
-                           sb.append(commit.getAuthor());
-                           break;
+                            sb.append(commit.getAuthor());
+                            break;
                         case EMAIL:
                             sb.append(commit.getEmail());
                             break;
@@ -177,7 +176,7 @@ public class QueryProcessor {
 
                     }
                 }
-
+                sb.append("\n");
             }
         }
         return sb.toString();

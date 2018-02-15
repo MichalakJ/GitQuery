@@ -46,8 +46,6 @@ public class GitRepository {
         int numberOfObjects = firstLevel.get(255);
         Map<Integer, String> secondLevel = packIndex.readSecondLevelEntries(numberOfObjects);
         Map<Integer, Integer> fourthLevel = packIndex.readFourthLevelEntries(numberOfObjects);
-        //Map<Integer, Integer> offSetMap = packIndex.read();
-        //readMainRepository(offSetMap);
         Map<Integer, ObjectType> objectTypes = getObjectTypes(fourthLevel);
         repository.setObjects(createRepositoryData(secondLevel, fourthLevel, objectTypes));
 
@@ -58,8 +56,6 @@ public class GitRepository {
             logger.debug(new String(object, Charset.forName("UTF-8")));
         }
         return repository;
-
-
     }
 
     private byte[] reconstructObject(Integer offset, ObjectType objectType) throws UnsupportedEncodingException, DataFormatException {

@@ -1,8 +1,5 @@
 package reader;
 
-import com.jcraft.jzlib.JZlib;
-import com.jcraft.jzlib.ZStream;
-
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
@@ -14,7 +11,7 @@ import java.util.zip.Inflater;
 /**
  * Created by Jakub on 2016-11-13.
  */
-public class FileManager {
+public class Utils {
 
     public static byte[] readFile(String sourcePath) throws IOException {
         Path path = Paths.get(sourcePath);
@@ -29,7 +26,7 @@ public class FileManager {
     }
 
     public static int getUnsignedByte(byte[] array, int index){
-        byte currentByte = FileManager.partArray(array, index, index)[0];
+        byte currentByte = Utils.partArray(array, index, index)[0];
         int anUnsignedByte = (int) currentByte & 0xff;
         return anUnsignedByte;
     }
